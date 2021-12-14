@@ -1,0 +1,278 @@
+
+
+---
+title: "Data Visualization with ggplot"
+author: "Arash Hatamirad, ahatamirad@gmail.com"
+date: "10/9/2021"
+output:
+  html_document: default
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Install required packages
+# install.packages("ggplot2")
+# install.packages("MASS")
+# install.packages("fBasics")
+# install.packages("moments")
+# install.packages("dplyr")
+# install.packages("haven")
+# install.packages("tydyr")
+# install.packages("png")
+# install.packages("showtext")
+
+library(MASS)
+library(fBasics)
+library(moments)
+library(dplyr)
+library(haven)
+library(tidyr)
+library(ggplot2)
+library(showtext)
+library(png)
+
+theme_set(theme_minimal())
+```
+
+
+
+### Initalizing
+
+```{r}
+# Read data
+d1 <- read_dta("tech_co_cstat_dta.zip")
+
+#psych::describe(d1)
+#glimpse(d1)
+#names(d1)
+#head(d1)
+#attributes(d1$tic)
+
+# put data for Sale>0 into d2
+d2 <- filter(d1,sale>0)
+
+d1<- d2 %>% 
+   mutate(conm = stringr::str_to_title(conm)) # Converts the string to title case
+```
+
+
+***
+
+### Q1  
+
+Create a bar graph of the average annual profits of each company using the variable oibdp such that the bars are arranged in descending order. 
+
+#### Answer:   
+
+Preparing data:  
+```{r}
+
+d1_1 <- d1 %>% 
+    group_by(conm) %>% 
+    summarize(avg_profit = mean(oibdp),.groups = "drop")
+
+
+```
+Drawing plot:  
+```{r}
+
+ggplot2:: ggplot(d1_1, aes(y = reorder(conm,avg_profit), x = avg_profit)) +
+  geom_col() +
+  scale_x_continuous("Average Profit in $millions", labels = scales::dollar_format(perfix="$")) +
+  scale_y_discrete("Company")
+
+```
+
+***  
+
+### Q2 
+
+Modify the plot in Q1 to add text labels to the bars. Note that I used hjust = -0.2 and size = 3 for the text labels. 
+
+#### Answer:   
+
+
+```{r}
+ggplot2:: ggplot(d1_1, aes(y = reorder(conm,avg_profit), x = avg_profit)) +
+  geom_col() +
+  scale_x_continuous("Average Profit in $millions", labels = scales::dollar_format(perfix="$")) +
+  scale_y_discrete("Company") +
+  geom_text(aes(label=round(avg_profit/1000,0),hjust=-0.2),size=3)
+ 
+```
+
+***  
+
+### Q3  
+
+In finance, it is widely believed that companies with more R&D prefer lower debt. Let’s explore whether we can observe this relationship in our data. Using mutate first create these two variables. I am giving you the exact formulas to put inside mutate().
+
+debt_ratio = (dlc + replace_na(dltt, 0)) / at
+
+rnd_int = xrd / sale
+
+Next, create a scatter plot with debt_ratio on the X axis and rnd_int on the Y axis. 
+
+#### Answer:   
+
+Preparing data:  
+```{r}
+d1_3 <- d1 %>% 
+  mutate(debt_ratio = (dlc + replace_na(dltt, 0)) / at,rnd_int = xrd / sale)
+
+
+```
+
+Drawing plot: 
+```{r}
+ggplot(data=d1_3, aes(x=debt_ratio, y=rnd_int)) +
+  geom_point() +
+  geom_smooth(formula = y ~ x,method="lm")+
+  scale_x_continuous("Debt Ratio") +
+  scale_y_continuous("R&D to Sales Ratio")
+
+
+
+```
+
+***  
+
+R&D investments are risky and may take years to generate returns. As such, borrowing money to fund R&D is very expensive. But looks like this is not true in our sample!  
+
+### Q4 
+
+Profit margin is simply profits divided by sales. Compare profit margins of the following six companies - Apple, IBM, Facebook, Paypal, Amazon, and Qualcomm - over the full sample period. Use `fyear` on the X axis. `fyear` is the fiscal year.  
+
+
+#### Answer:   
+
+Preparing data:  
+
+```{r}
+
+d1_4 <- d1 %>% 
+  filter(tic %in% c("AAPL", "FB", "IBM", "PYPL", "AMZN", "QCOM")) %>% 
+  mutate(pr_margin = oibdp / sale,
+         fyear=as.Date(paste0(fyear,"-12-31")))
+```
+
+Now use `d1_4` to create the following plot:  
+
+```{r}
+ggplot(data=d1_4,aes(fyear,pr_margin)) +
+  facet_wrap(~conm,nrow=2) +
+  scale_x_date("Fiscal Year") +
+  scale_y_continuous("Profit Margin", labels = scales::label_percent()) +
+  geom_line()
+  
+
+```
+***  
+
+### Q5  
+
+Tesla is the largest car manufacturer in the world by market value. But what about sales? Let’s compare sales and market value over the 10/11 years period in our sample.  
+
+First create a data frame that you can use to create a plot where you can compare sales and market value in the same plot. This requires rearranging the data into “long” form, where we will stack Tesla’s sales and market value on top of each other.  
+
+Learn more about the functions that deal with long and wide formats conversions here: https://tidyr.tidyverse.org/reference/pivot_longer.html and https://tidyr.tidyverse.org/reference/pivot_wider.html  
+
+#### Answer:   
+
+Preparing data: 
+```{r}
+d1_5 <- d1 %>% 
+  filter(conm == "Tesla Inc") %>% 
+  mutate(mkt_val = prcc_f * cshpri) %>% # Create market value
+  select(conm, datadate, mkt_val, sale) %>% 
+  pivot_longer(cols = c(mkt_val, sale), 
+               names_to = "fin_var", 
+               values_to = "fin_value")
+
+
+```
+
+Now using d1_5, create the following plot using datadate on the X axis:   
+
+```{r}
+ggplot(data=d1_5) +
+  geom_line(aes(datadate,fin_value,color=fin_var),size=1.01) +
+  scale_x_date("Date") +
+  scale_y_continuous("",labels = scales::dollar_format(prefix = "$")) +
+  theme(legend.position = "top",legend.direction = "horizontal") +
+  scale_color_discrete(name = "Financial Variable")
+
+```
+
+***  
+
+### Q6  
+
+When the time variable is discrete, we can also show a time trend using a bar plot. This is quite common in practice. fyear is an integer so we can use it as a discrete variable and create a bar plot of profits for Facebook and IBM as shown below. Manually change the fill of bars using the following colors: c("#5cc9f5", "#b131a2")   
+
+#### Answer:  
+Preparing data:  
+
+```{r}
+
+d1_6 <- d1 %>% 
+  filter(tic %in% c("FB", "IBM")) %>% 
+  select(conm, fyear,oibdp)
+
+```
+
+
+Drawing the plot:  
+
+```{r}
+
+ggplot(data=d1_6) +
+  facet_wrap(~conm,ncol=1)+
+  geom_col(aes(fyear,oibdp,fill=conm)) +
+  theme(legend.position ="top",legend.direction = "horizontal",legend.title = element_blank()) +
+  scale_x_continuous("Fiscal Year",breaks = seq(2010,2020,1)) +
+  scale_y_continuous("Profits in $ millions") +
+  scale_fill_manual(values =  c("#5cc9f5", "#b131a2"))
+ 
+```
+***  
+
+### Q7  
+     
+
+#### Answer:  
+Preparing data:  
+
+```{r}
+
+d1_7 <- d1 %>% 
+  filter(tic=="FB") %>% 
+  select(conm, fyear,oibdp)
+
+img <- png::readPNG("mark.png")
+
+```
+
+Drawing the plot:  
+
+```{r}
+ggplot(data=d1_7) +
+  geom_col(aes(fyear,oibdp),fill=rgb(78/255,189/255,242/255)) +
+   scale_x_continuous("Fiscal Year", breaks = seq(2010,2020,1)) +
+   scale_y_continuous("Profits in $ million") +
+   annotation_raster(img, xmin =2013, xmax = 2016, 
+                    ymin = 25000, ymax = 37000, interpolate = T)
+
+ 
+```
+
+
+***   
+
+
+
+
+

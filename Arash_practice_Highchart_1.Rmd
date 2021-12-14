@@ -1,0 +1,53 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+library(highcharter)
+
+install.packages("maggittr")
+
+library(magrittr)
+
+```
+
+
+```{r}
+data("citytemp") 
+```
+
+```{r}
+
+hc <- highchart() %>% 
+  hc_xAxis(categories = citytemp$month) %>% 
+  hc_add_series(name = "Tokyo", data = citytemp$tokyo) %>% 
+  hc_add_series(name = "London", data = citytemp$london) %>% 
+  hc_add_series(name = "Other city",
+                data = (citytemp$tokyo + citytemp$london)/2)
+
+hc
+
+```
+
+```{r}
+hc %>% 
+  hc_yAxis(title = list(text = "Temperature in y Axis",align="middle"),
+           opposite = TRUE,
+           minorTickInterval = "auto",
+           minorGridLineDashStyle = "LongDashDotDot",
+           showFirstLabel = TRUE,
+           showLastLabel = TRUE) %>% 
+    hc_xAxis(title = list(text = "Month in x Axis"),
+           opposite = TRUE)
+```
+
+
+```{r}
+
+```
+
