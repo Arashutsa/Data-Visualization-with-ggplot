@@ -1,7 +1,4 @@
 ---
-title: "DA-6233 - Data Visualization - Homework 03"
-# subtitle: "Professor: Dr. Ashwin Malshe"
-author: "Arash Hatamirad, fus941@my.utsa.edu"
 date: "29 October 2021"
 output:
   html_notebook:

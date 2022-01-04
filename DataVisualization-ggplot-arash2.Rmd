@@ -1,7 +1,7 @@
 
 
 ---
-title: "Data Visualization with ggplot"
+title: "R Code"
 author: "Arash Hatamirad, ahatamirad@gmail.com"
 date: "9/9/2021"
 output:
