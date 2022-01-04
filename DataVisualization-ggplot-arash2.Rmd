@@ -22,7 +22,8 @@ knitr::opts_chunk$set(echo = TRUE)
 # install.packages("moments")
 # install.packages("dplyr")
 # install.packages("haven")
-#install.packages("ggplot2")
+install.packages("ggplot2")
+
 
 library(MASS)
 library(fBasics)
@@ -58,7 +59,8 @@ d2 <- filter(d1,sale>0)
 
 ### Q1  
 
-Print a data frame with the medians of cogs, emp, and xrd.
+Print a data frame with the medians of cogs, emp, and xrd.  
+
 
 #### Answer:   
 
