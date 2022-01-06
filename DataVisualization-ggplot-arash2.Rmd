@@ -53,13 +53,16 @@ d1 <- read_dta("tech_co_cstat_dta.zip")
 d2 <- filter(d1,sale>0)
 
 
+
 ```
 
 ***
 
 ### Q1  
 
-Print a data frame with the medians of cogs, emp, and xrd.  
+Print a data frame with the medians of cogs, emp, and xrd.    
+
+
 
 
 #### Answer:   
@@ -73,6 +76,8 @@ summarize(cogs=median(cogs,na.rm = TRUE),emp=median(emp,na.rm = TRUE),xrd=median
   
   
 ```
+
+
 
 ***
 
